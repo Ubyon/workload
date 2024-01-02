@@ -1,0 +1,484 @@
+openapi: 3.0.0
+
+info:
+  version: "1.0.0"
+  title: Workload Attestor API
+
+tags:
+  - name: Workload Attestor
+
+paths:
+
+  /workload-agent/v1/apps-creds:
+    get:
+      description: |
+        Get credentials for the target application
+      tags:
+        - Credentials
+      summary: Get credentials for the target application
+      parameters:
+        - $ref: "#/components/parameters/app"
+        - $ref: "#/components/parameters/requiredWorkloadId"
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppCredentialsInfoObj'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized access
+        403:
+          description: Forbidden
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /workload-agent/v1/workloads:
+    post:
+      description: |
+        Register/add the given workload.
+      tags:
+        - Workloads
+      requestBody:
+        description: "Workload that needs to be added/registered"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkloadRegistrationReqObj"
+      summary: Get ssh sessions summary.
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadRegistrationRespObj'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized access
+        403:
+          description: Forbidden
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      description: |
+        Get the workloads given the query parameters
+      tags:
+        - Workloads
+      parameters:
+        - $ref: "#/components/parameters/workloadId"
+        - $ref: "#/components/parameters/workloadLocalState"
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadsObj'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized access
+        403:
+          description: Forbidden
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      description: |
+        Delete the workloads given the query parameters
+      tags:
+        - Workloads
+      parameters:
+        - $ref: "#/components/parameters/workloadId"
+        - $ref: "#/components/parameters/workloadType"
+        - $ref: "#/components/parameters/workloadNativeId"
+        - $ref: "#/components/parameters/workloadName"
+        - $ref: "#/components/parameters/workloadNamespace"
+      responses:
+        # Response code
+        200:
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkloadsObj'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        401:
+          description: Unauthorized access
+        403:
+          description: Forbidden
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    app:
+      name: app
+      in: query
+      description: Destination App fqdn/ip
+      required: true
+      schema:
+        type: string
+
+    requiredWorkloadId:
+      name: id
+      in: query
+      description: Workload Id
+      required: true
+      example: "wl12345"
+      schema:
+        type: string
+
+    workloadId:
+      name: id
+      in: query
+      description: Workload Id
+      required: false
+      example: "wl12345"
+      schema:
+        type: string
+
+    workloadLocalState:
+      name: localState
+      in: query
+      description: Workload local state
+      required: false
+      schema:
+        enum:
+          - INVALID
+          - PENDING-REGISTRATION
+          - REGISTERED
+          - MARKED-FOR-DEL
+          - DELETED
+
+    workloadStatus:
+      name: status
+      in: query
+      description: Workload status
+      required: false
+      schema:
+        enum:
+          - ENABLED
+          - DISABLED
+          - UNSPECIFIED
+
+    workloadNativeId:
+      name: nativeId
+      in: query
+      description: Native Id/UUID/MAC of the Workload
+      required: false
+      example: "123456"
+      schema:
+        type: string
+
+    workloadName:
+      name: name
+      in: query
+      description: Name of the Workload
+      required: false
+      example: "s3hello-xght"
+      schema:
+        type: string
+
+    workloadNamespace:
+      name: namespace
+      in: query
+      description: Namespace of the Workload
+      required: false
+      example: "ctrlplanedemo"
+      schema:
+        type: string
+
+    workloadType:
+      name: type
+      in: query
+      description: Workload type
+      required: false
+      schema:
+        enum:
+          - VM
+          - CONTAINER
+          - K8S-POD
+
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error_code
+        - description
+      properties:
+        error_code:
+          type: string
+          description: Error code
+          example: 500
+        description:
+          type: string
+          description: Error description
+          example: Unknown target app
+
+    TagValueObj:
+      type: object
+      required:
+        - tag
+      properties:
+        tag:
+          type: string
+          example: "Tag"
+        value:
+          type: string
+          example: "Value1"
+
+    WorkloadAttribsObj:
+      type: object
+      required:
+        - type
+        - certificate
+      properties:
+        type:
+          type: string
+          example: "CONTAINER"
+          description: Workload Type
+          enum:
+            - VM
+            - CONTAINER
+            - K8S-POD
+        native_id:
+          type: string
+          description: Native Id/UUID/MAC of the VM/Container/Pod
+        name:
+          type: string
+          description: Name of the Workload
+        namespace:
+          type: string
+          description: K8s namespace of the Workload
+        ip:
+          type: string
+          example: "1.2.3.4"
+          description: IP of the VM/Container/Pod
+        tags:
+          type: array
+          description: Tags that are assigned to the workload primarily to create a equivalence class for a group of workloads based on any characteristics chosen by the admin.
+          items:
+            $ref: '#/components/schemas/TagValueObj'
+
+    WorkloadRegistrationReqObj:
+      type: object
+      properties:
+        attribs:
+          $ref: '#/components/schemas/WorkloadAttribsObj'
+
+    WorkloadStateObj:
+      type: object
+      properties:
+        workload_id:
+          type: string
+          example: "id1234"
+          description: Workload Id allocated by the Ubyon Control Plane
+        status:
+          type: string
+          enum:
+            - PENDING REGISTRATION
+            - ENABLED
+            - DISABLED
+            - UNSPECIFIED
+
+    WorkloadRegistrationRespObj:
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/WorkloadStateObj'
+
+    WorkloadObj:
+      type: object
+      properties:
+        state:
+          $ref: '#/components/schemas/WorkloadStateObj'
+        attribs:
+          $ref: '#/components/schemas/WorkloadAttribsObj'
+
+    WorkloadsObj:
+      type: object
+      properties:
+        workloads:
+          type: array
+          description: List of workloads.
+          items:
+            $ref: '#/components/schemas/WorkloadObj'
+
+    CredKeyCertificatePairObj:
+      type: object
+      required:
+        - private_key
+        - certificate
+      properties:
+        private_key:
+          type: string
+          description: base64 encoding of the pem format byte array of the private key
+        certificate:
+          type: string
+          description: base64 encoding of the pem format byte array of the certificate
+        ca_certificate:
+          type: string
+          description: base64 encoding of the pem format byte array of the CA certificate
+
+    CredCertificateObj:
+      type: object
+      required:
+        - certificate
+      properties:
+        certificate:
+          type: string
+          description: base64 encoding of the pem format byte array of the certificate
+
+    CredUsernamePasswordObj:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          example: "alice"
+        password:
+          type: string
+          example: "in wonderland"
+
+    CredKeyValueObj:
+      type: object
+      required:
+        - key
+      properties:
+        key:
+          type: string
+          example: "Key1"
+        value:
+          type: string
+          example: "Value1"
+
+    CredKeyValuesObj:
+      type: object
+      properties:
+        key_values:
+          type: array
+          description: List of kvs.
+          items:
+            $ref: '#/components/schemas/CredKeyValueObj'
+
+    CredAwsTokensObj:
+      type: object
+      required:
+        - aws_access_key_id
+        - aws_secret_access_key
+      properties:
+        aws_access_key_id:
+          type: string
+          example: "Key1"
+        aws_secret_access_key:
+          type: string
+          example: "SecAccKey1"
+        aws_session_token:
+          type: string
+          description: This can be empty
+          example: "SecAccKey1"
+        aws_region:
+          type: string
+          description: This can be empty
+          example: "us-west-1"
+
+    CredSslInfoObj:
+      type: object
+      required:
+        - aws_access_key_id
+        - aws_secret_access_key
+      properties:
+        ssl_enable:
+          type: boolean
+          example: true
+
+    AppCredentialObj:
+      type: object
+      required:
+        - credential_type
+      properties:
+        credential_type:
+          type: string
+          example: "AWS TOKEN"
+          description: Connector ID
+          enum:
+            - KEY VALUES
+            - JWT
+            - API TOKEN
+            - USERNAME PASSWORD
+            - AWS TOKEN
+            - HTTP HEADERS
+            - CLIENT CERTIFICATE
+            - SERVER CA CERTIFICATE
+            - SSL INFO
+        credential:
+          oneOf:
+            - $ref: '#/components/schemas/CredKeyValuesObj'
+            - $ref: '#/components/schemas/CredCertificateObj'
+            - $ref: '#/components/schemas/CredKeyCertificatePairObj'
+            - $ref: '#/components/schemas/CredUsernamePasswordObj'
+            - $ref: '#/components/schemas/CredAwsTokensObj'
+            - $ref: '#/components/schemas/CredSslInfoObj'
+        valid_start_utc_epoch_secs:
+          type: integer
+          format: int64
+        valid_end_utc_epoch_secs:
+          type: integer
+          format: int64
+
+    AppCredentialsInfoObj:
+      type: object
+      properties:
+        app:
+          type: string
+          example: "s3.aws.com"
+          description: Destination app
+        credentials:
+          type: array
+          description: List of credentials.
+          items:
+            $ref: '#/components/schemas/AppCredentialObj'
