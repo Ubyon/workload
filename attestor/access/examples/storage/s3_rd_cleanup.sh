@@ -3,7 +3,7 @@
 pod_name=$(kubectl get pods -n internal2cdemo -o=jsonpath='{.items[0].metadata.name}' -l job-name=s3hello)
 
 # Delete the job
-kubectl delete -f /home/ubuntu/tln/internal2cdemo/podspecs/srcapp/s3hello-job.yaml
+kubectl delete -f s3hello-job.yaml
 
 # Check if the job is deleted
 printf "Checking if the job s3hello is deleted...\n"

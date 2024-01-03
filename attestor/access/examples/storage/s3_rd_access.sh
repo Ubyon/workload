@@ -3,7 +3,7 @@
 # Step 1: Apply the YAML file to create the job
 printf "____________________________________________________________________________________\n"
 printf "## Deploy the workload -->  kubectl apply -f s3hello-job.yaml\n"
-kubectl apply -f /home/ubuntu/tln/internal2cdemo/podspecs/srcapp/s3hello-job.yaml
+kubectl apply -f s3hello-job.yaml
 
 # Wait for the job to complete
 printf "____________________________________________________________________________________\n"

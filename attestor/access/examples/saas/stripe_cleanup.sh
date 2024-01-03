@@ -3,7 +3,7 @@
 pod_name=$(kubectl get pods -n internal2cdemo -o=jsonpath='{.items[0].metadata.name}' -l job-name=apikeyshello)
 
 # Delete the job
-kubectl delete -f /home/ubuntu/tln/internal2cdemo/podspecs/srcapp/stripe-job.yaml
+kubectl delete -f stripe-job.yaml
 
 # Check if the job is deleted
 printf "Checking if the job apikeys-hello is deleted...\n"
