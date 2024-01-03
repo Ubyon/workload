@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: apikeyshello
+  name: s3hello
   namespace: internal2cdemo
   annotations:
     reloader.stakater.com/auto: "true"
@@ -9,30 +9,28 @@ spec:
   template:
     metadata:
       labels:
-        app: apikeyshello
+        app: s3hello
     spec:
       volumes:
-      - name: apikeys-creds-volume
+      - name: aws-creds-volume
         emptyDir:
           sizeLimit: 1Mi
       terminationGracePeriodSeconds: 30
       initContainers:
-        - name: apikeys-wlinitcontainer
+        - name: aws-wlinitcontainer
           imagePullPolicy: Always
-          image: quay.io/ubyon/sampleapps:apikeys-wlinitcontainer-1.0
+          image: quay.io/ubyon/sampleapps:aws-wlinitcontainer-0.5
           env:
             - name: CLUSTER_TYPE
               value: "dev"
-            - name: WORKLOAD_ID
-              value: ""
             - name: UBYON_WORKLOAD_ATTESTOR_HOST_AND_PORT
               value: "ubyon-workload-attestor.internal2cdemo.svc.cluster.local:34323"
             - name: TARGET_APP
-              value: "api.stripe.com"
+              value: "signin.aws.amazon.com"
+            - name: OUTPUT_AWS_CREDS_FILE
+              value: "/etc/awscreds/credentials"
             - name: EXTRA_TAGS_JSON_ARR
-              value: '[{"tag": "csp", "value": "Azure"}, {"tag": "Group", "value": "Payments"}]'
-            - name: OUTPUT_API_KEYS_FILE
-              value: "/etc/apikeys/credentials"
+              value: '[{"tag": "csp", "value": "Aws"}, {"tag": "Group", "value": "Storage"}]'
             - name: MY_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -50,19 +48,15 @@ spec:
                 fieldRef:
                   fieldPath: status.podIP
           volumeMounts:
-            - name: apikeys-creds-volume
-              mountPath: /etc/apikeys
+            - name: aws-creds-volume
+              mountPath: /etc/awscreds
       containers:
-      - image: quay.io/ubyon/sampleapps:apikeys-hello-1.0
-        name: apikeyshello
+      - image: quay.io/ubyon/sampleapps:s3-hello-1.0
+        name: s3hello
         imagePullPolicy: Always
         env:
           - name: CLUSTER_TYPE
             value: "dev"
-          - name: TARGET_SERVER
-            value: "https://api.stripe.com/v1/customers"
-          - name: API_KEYS_FILE
-            value: "/etc/apikeys/credentials"
           - name: MY_NODE_NAME
             valueFrom:
               fieldRef:
@@ -80,8 +74,8 @@ spec:
               fieldRef:
                 fieldPath: status.podIP
         volumeMounts:
-          - name: apikeys-creds-volume
-            mountPath: "/etc/apikeys"
+          - name: aws-creds-volume
+            mountPath: "/root/.aws"
       restartPolicy: Never
       imagePullSecrets:
         - name: ubyon-workload-pull-secret

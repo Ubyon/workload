@@ -1,2 +1,90 @@
-
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rdshello
+  namespace: internal2cdemo
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  template:
+    metadata:
+      labels:
+        app: rdshello
+    spec:
+      volumes:
+      - name: rds-creds-volume
+        emptyDir:
+          sizeLimit: 1Mi
+      terminationGracePeriodSeconds: 30
+      initContainers:
+        - name: rds-wlinitcontainer
+          imagePullPolicy: Always
+          image: quay.io/ubyon/sampleapps:rds-wlinitcontainer-0.5
+          env:
+            - name: CLUSTER_TYPE
+              value: "dev"
+            - name: WORKLOAD_ID
+              value: ""
+            - name: UBYON_WORKLOAD_ATTESTOR_HOST_AND_PORT
+              value: "ubyon-workload-attestor.internal2cdemo.svc.cluster.local:34323"
+            - name: TARGET_APP
+              value: "workload-rds-database.cy54jubr4pja.us-west-1.rds.amazonaws.com"
+            - name: OUTPUT_RDS_CREDS_FILE
+              value: "/etc/rdscreds/credentials"
+            - name: EXTRA_TAGS_JSON_ARR
+              value: '[{"tag": "csp", "value": "Aws"}, {"tag": "Group", "value": "Data"}]'
+            - name: MY_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: MY_POD_NAME
+              valueFrom:
+               fieldRef:
+                 fieldPath: metadata.name
+            - name: MY_POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          volumeMounts:
+            - name: rds-creds-volume
+              mountPath: /etc/rdscreds
+      containers:
+      - image: quay.io/ubyon/sampleapps:rds-hello-1.1
+        name: rdshello
+        imagePullPolicy: Always
+        env:
+          - name: CLUSTER_TYPE
+            value: "dev"
+          - name: DB_SERVER
+            value: "workload-rds-database.cy54jubr4pja.us-west-1.rds.amazonaws.com"
+          - name: DB_SERVER_PORT
+            value: "5432"
+          - name: DB_CREDS_FILE
+            value: "/etc/rdscreds/credentials"
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_POD_NAME
+            valueFrom:
+             fieldRef:
+               fieldPath: metadata.name
+          - name: MY_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: MY_POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+        volumeMounts:
+          - name: rds-creds-volume
+            mountPath: "/etc/rdscreds"
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ubyon-workload-pull-secret
 
